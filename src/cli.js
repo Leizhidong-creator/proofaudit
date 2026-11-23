@@ -7,7 +7,7 @@ const checks = require('./checks');
 const report = require('./report');
 const toolchain = require('./toolchain');
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 
 function help() {
   return `proofaudit ${VERSION} — agent math-code audit
@@ -22,6 +22,9 @@ there is, and the only one that can confirm a proof is valid.
 
 Usage:
   proofaudit audit <path> [options]
+  proofaudit demo [--json] [--md <file>]   Audit the bundled demo proof
+                                            (a deliberately flawed "proof"
+                                            of the Riemann Hypothesis)
 
 Options:
   --preset <name>      Load a preset (currently: rh)
@@ -73,6 +76,10 @@ function main() {
     console.log(help());
     process.exit(positionals.length === 0 && !flags.help ? 1 : 0);
   }
+  if (positionals[0] === 'demo') {
+    runAudit(path.join(__dirname, 'demo-fixture'), 'rh', flags);
+    return;
+  }
   if (positionals[0] !== 'audit') {
     console.error(`Unknown command: ${positionals[0]}\n${help()}`);
     process.exit(1);
@@ -82,9 +89,12 @@ function main() {
     console.error(`Target not found: ${target}`);
     process.exit(1);
   }
+  runAudit(target, flags.preset ? String(flags.preset) : null, flags, String(flags.theorem || ''));
+}
 
+function runAudit(target, presetName, flags, theoremName) {
   let preset = null;
-  if (flags.preset) preset = loadPreset(String(flags.preset));
+  if (presetName) preset = loadPreset(presetName);
 
   const files = checks.collectLeanFiles(target);
   const docs = checks.readFiles(files);
