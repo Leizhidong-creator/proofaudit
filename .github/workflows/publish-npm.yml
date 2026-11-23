@@ -1,0 +1,24 @@
+name: Publish to npm
+
+# Publishes proofaudit to the npm registry when a GitHub Release is created.
+# One-time setup (repo owner only): create a granular npm token scoped to the
+# `proofaudit` package with publish permission, and add it as a repository
+# secret named NPM_TOKEN (Settings > Secrets and variables > Actions).
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: https://registry.npmjs.org
+      - run: node test/selftest.js
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
